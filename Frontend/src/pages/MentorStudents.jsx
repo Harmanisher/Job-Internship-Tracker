@@ -176,7 +176,7 @@ export default function MentorStudentApplications() {
 
           {/* Back link */}
           <Link
-            to="/mentor-dashboard"
+            to="/Mentordashboard"
             className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition mb-6"
           >
             <ArrowLeft size={15} />
