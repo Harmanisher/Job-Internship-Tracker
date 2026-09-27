@@ -14,9 +14,12 @@ app.use(cookieParser());
 
 // *** cors
 app.use(cors({
-    origin : "http://localhost:5173",
-    credentials : true
-}))
+    origin: [
+        "http://localhost:5173",
+        "https://job-internship-tracker-phi.vercel.app"
+    ],
+    credentials: true
+}));
 
 // *****Routes
 app.use('/api/auth',authRoutes);      //Authentication Route
