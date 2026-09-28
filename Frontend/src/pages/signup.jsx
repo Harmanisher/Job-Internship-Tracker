@@ -110,6 +110,7 @@ async function handleSubmit()
     catch(err)
     {
         console.error("Something Went Wrong", err);
+        toast.error(err.response?.data?.message || "Something went Wrong! Please Try again later");
     }
 }
 
