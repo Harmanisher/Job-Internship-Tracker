@@ -38,7 +38,7 @@ app.use(cors({
         callback(new Error("Not allowed by CORS"));
     },
     credentials: true
-}));c
+}));
 
 // *****Routes
 app.use('/api/auth',authRoutes);      //Authentication Route
