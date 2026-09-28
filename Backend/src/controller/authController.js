@@ -37,7 +37,7 @@ export async function signup(req,res)
     const otp = crypto.randomInt(100000, 1000000).toString();
     console.log(otp);
 
-    const otpExpiry = new Date(Date.now() + 10*60*1000); // otp will bw valid only for 10 minutes.
+    const otpExpiry = new Date(Date.now() + 5*60*1000); // otp will bw valid only for 5 minutes.
 
     // ***Delete already registered user.
     await temporaryUser.deleteOne({email : email});
@@ -59,43 +59,45 @@ export async function signup(req,res)
 
     //*** Send the otp via Mail 
 
-    const mailOptions = {
-        from : process.env.user,
-        to : email,
-        subject: "Verify Your Email - Your OTP Code",
-        text: `
-    Hello,
+// *** Send the OTP via Resend
+const { data, error } = await transporter.emails.send({
+    from: "onboarding@resend.dev",
+    to: email,
+    subject: "Verify Your Email - Your OTP Code",
+    text: `
+Hello,
 
-    Thank you for registering with Job & Internship Tracker.
+Thank you for registering with Job & Internship Tracker.
 
-    To complete your registration, please verify your email using the OTP below:
+To complete your registration, please verify your email using the OTP below:
 
-    Your OTP: ${otp}
+Your OTP: ${otp}
 
-    This OTP is valid for 10 minutes and can only be used once.
+This OTP is valid for 5 minutes and can only be used once.
 
-    For your security:
-    - Do not share this OTP with anyone.
-    - Our team will never ask you for your OTP.
-    - If you did not request this verification code, you can safely ignore this email.
+For your security:
 
-    Best regards,
-    Job & Internship Tracker Team
+- Do not share this OTP with anyone.
+- Our team will never ask you for your OTP.
+- If you did not request this verification code, you can safely ignore this email.
 
-    This is an automated email. Please do not reply.
-        `
-    }
+Best regards,
 
-    await transporter.sendMail(mailOptions, (err,info)=>{
-        if(err)
-        {
-            console.log("Email can't be sent : ",err.message);
-        }
-        else
-        {
-            console.log("Email sent Successfully!");
-        }
-    })
+Job & Internship Tracker Team
+
+This is an automated email. Please do not reply.
+    `
+});
+
+if (error) {
+    console.log("Email can't be sent : ", error);
+
+    return res.status(500).json({
+        message: "Failed to send OTP email"
+    });
+}
+
+console.log("Email sent Successfully!");
 
         // Instead of: res.redirect(`/verify?email=${encodeURIComponent(email)}`);
             res.status(200).json({ message: "OTP sent. Please verify your email.", email: email });
@@ -107,42 +109,48 @@ export async function signup(req,res)
     }
 }
 
-export async function resend(req,res)
-{
-    try
-    {
-        const {email} = req.body;
+export async function resend(req, res) {
 
-    if(!email)
-    {
-        return res.status(400).json({message : "Email is Required!"});
-    }
+    try {
 
-    const findUser = await temporaryUser.findOne({email : email});
+        const { email } = req.body;
 
-    if(!findUser)
-    {
-        return res.status(404).json({message : "User not registered!"});
-    }
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is Required!"
+            });
+        }
 
-    // **** Generate Otp.
-    const newotp = crypto.randomInt(100000, 1000000).toString();
-    console.log("newotp",newotp);
+        const findUser = await temporaryUser.findOne({ email: email });
 
-    const newotpExpiry = new Date(Date.now() + 10*60*1000); // otp will bw valid only for 10 minutes.
+        if (!findUser) {
+            return res.status(404).json({
+                message: "User not registered!"
+            });
+        }
 
-    const id = findUser._id;
-    await temporaryUser.findByIdAndUpdate(id,{
-        otp : newotp,
-        otpExpiry : newotpExpiry
-    });
+        // **** Generate Otp
+        const newotp = crypto.randomInt(100000, 1000000).toString();
 
-    // ****Send new otp via Mail
-    const mailOptions = {
-        from : process.env.user,
-        to : email,
-        subject: "Verify Your Email - Your OTP Code",
-        text: `
+        console.log("newotp", newotp);
+
+        const newotpExpiry = new Date(
+            Date.now() + 5 * 60 * 1000
+        ); // OTP valid for 10 minutes
+
+        const id = findUser._id;
+
+        await temporaryUser.findByIdAndUpdate(id, {
+            otp: newotp,
+            otpExpiry: newotpExpiry
+        });
+
+        // **** Send new OTP via Resend
+        const { data, error } = await transporter.emails.send({
+            from: "onboarding@resend.dev",
+            to: email,
+            subject: "Verify Your Email - Your OTP Code",
+            text: `
     Hello,
 
     Thank you for registering with Job & Internship Tracker.
@@ -151,7 +159,7 @@ export async function resend(req,res)
 
     Your OTP: ${newotp}
 
-    This OTP is valid for 10 minutes and can only be used once.
+    This OTP is valid for 5 minutes and can only be used once.
 
     For your security:
     - Do not share this OTP with anyone.
@@ -162,27 +170,34 @@ export async function resend(req,res)
     Job & Internship Tracker Team
 
     This is an automated email. Please do not reply.
-        `
-    }
+            `
+        });
 
-    await transporter.sendMail(mailOptions, (err,info)=>{
-        if(err)
-        {
-            console.log("Email can't be sent : ",err.message);
+        if (error) {
+
+            console.log("Email can't be sent : ", error);
+
+            return res.status(500).json({
+                message: "Failed to send OTP email"
+            });
+
         }
-        else
-        {
-            console.log("Email sent Successfully!");
-        }
-    })    
 
-        res.status(200).json({message:"Otp resend Successfully!"})
+        console.log("Email sent Successfully!");
+
+        return res.status(200).json({
+            message: "Otp resend Successfully!"
+        });
+
     }
+    catch (err) {
 
-    catch(err)
-    {
         console.log(err);
-        res.status(500).json({message : "Something went Wrong"});
+
+        return res.status(500).json({
+            message: "Something went Wrong"
+        });
+
     }
 
 }

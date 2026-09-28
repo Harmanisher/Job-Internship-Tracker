@@ -144,7 +144,7 @@ export default function Verify() {
           </div>
 
           <p className="text-center text-xs text-zinc-500 mt-3">
-            Code expires in 10 minutes.
+            Code expires in 5 minutes.
           </p>
         </div>
       </main>
