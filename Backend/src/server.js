@@ -14,10 +14,29 @@ app.use(cookieParser());
 
 // *** cors
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://job-internship-tracker-phi.vercel.app"
-    ],
+    origin: function (origin, callback) {
+
+        const allowedOrigins = [
+            "http://localhost:5173",
+            "https://job-internship-tracker-phi.vercel.app"
+        ];
+
+        // Allow requests without an Origin
+        // such as some server-to-server requests
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        // Allow the main Vercel URL and Vercel deployment URLs
+        if (
+            allowedOrigins.includes(origin) ||
+            /^https:\/\/job-internship-tracker-[a-z0-9-]+-isher-404\.vercel\.app$/.test(origin)
+        ) {
+            return callback(null, true);
+        }
+
+        callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
 }));
 
