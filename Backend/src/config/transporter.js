@@ -1,6 +1,6 @@
 
 
-// **** This code works for the localhost but when we deploy our code on Render, we are not able to maintain or create the SMTP connection, so we use Resend that handles with the SMTP connection itself.
+// **** This code works for the localhost but when we deploy our code on Render, we are not able to maintain or create the SMTP connection, so we use Mailjet that handles with the SMTP connection itself.
 /*
 import nodemailer from "nodemailer"
 
@@ -17,9 +17,11 @@ export default transporter;
 */
 
 
-// ***** Resend Code : 
-import { Resend } from "resend";
+import Mailjet from "node-mailjet";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = Mailjet.apiConnect(
+    process.env.MAILJET_API_KEY,
+    process.env.MAILJET_SECRET_KEY
+);
 
-export default resend;
+export default transporter;
